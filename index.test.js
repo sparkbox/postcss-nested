@@ -5,6 +5,7 @@ var plugin = require('./');
 function run(input, output, opts) {
     return postcss([ plugin(opts) ]).process(input)
         .then(result => {
+            console.log(result.css);
             expect(result.css).toEqual(output);
             expect(result.warnings().length).toBe(0);
         });
@@ -100,4 +101,28 @@ it('moves comment with declaration', () => {
 it('saves order of rules', () => {
     return run('.one { & .two {} & .tree {} }',
                '.one .two {} .one .tree {}');
+});
+
+it('handles one line at-rules', () => {
+    return run('a { @media screen { @include b; } }',
+            '@media screen {a { @include b } }');
+});
+
+fit('doesn not comment out everything', () => {
+    return run(`
+foo {
+    &adam {
+        //comment
+        bar: baz;
+    }
+}
+`,
+            `
+foo {
+    &adam {
+        //comment
+        bar: baz;
+    }
+}
+`);
 });
